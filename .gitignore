@@ -1,0 +1,12 @@
+#Node
+node_modules/
+#project
+.vscode/
+coverage/
+dist/
+es/
+lib/
+logs/
+*.code-workspace
+*.log
+.jenkins

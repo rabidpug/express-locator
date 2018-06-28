@@ -1,0 +1,12 @@
+[{
+    "name": "master",
+    "url": "https://ci.jcuneo.com/job/express-locator/job/master",
+    "username": "admin",
+    "password": "M28tC86#o"
+},
+{
+    "name": "next",
+    "url": "https://ci.jcuneo.com/job/express-locator/job/next",
+    "username": "admin",
+    "password": "M28tC86#o"
+}]
