@@ -16,15 +16,11 @@ type toRegisterType =
   | string
   | Array<toRegisterType>
 type dependencyType = {} | Function | Class<any>
-type propsType = {
-  ControlledError: dependencyType | mixed,
-  config: { [key: string]: mixed } | mixed,
-  expressLocator: {},
-}
+type configsType = { [key: string]: {} }
 type registeredType = {
   dependencies?: Array<string>,
   config?: boolean,
-  construct?: string | ( ( propsType, Array<string> ) => dependencyType ),
+  construct?: string | ( ( dependencyType, configsType, dependencyType | mixed, Array<string> ) => dependencyType ),
   instance?: boolean,
   [key: string]: Function | string,
 }
@@ -40,7 +36,7 @@ export default class Locator {
 
   cache: { [key: string]: dependencyType }
 
-  configs: { [key: string]: mixed }
+  configs: configsType
 
   constructor () {
     this.registry = {
@@ -121,17 +117,21 @@ export default class Locator {
 
           this.cache[dependencyName] = require( name )
         } else {
-          const props: propsType = {
-            ControlledError : this.get( 'ControlledError' ),
-            config          : this.configs && ( config ? this.configs : this.configs[dependencyName] ),
-            expressLocator  : this,
-          }
+          const expressLocator = this
+          const configs = this.configs ? config ? this.configs : this.configs[dependencyName] : {}
+          const controlledError = this.get( 'ControlledError' )
 
           if ( construct.prototype instanceof Instance || instance ) {
             const Construct = construct
 
-            this.cache[dependencyName] = new Construct( props, dependencies )
-          } else if ( typeof construct === 'function' ) this.cache[dependencyName] = construct( props, dependencies )
+            this.cache[dependencyName] = new Construct(
+              expressLocator, configs, controlledError, dependencies
+            )
+          } else if ( typeof construct === 'function' ) {
+            this.cache[dependencyName] = construct(
+              expressLocator, configs, controlledError, dependencies
+            )
+          }
         }
       }
     }

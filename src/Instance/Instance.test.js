@@ -1,36 +1,32 @@
 import Instance from './'
 
 describe( 'Instance class', () => {
-  it( 'should assign the passed props to this', () => {
-    const props = {
-      hello : 'hi',
-      you   : 'lo',
-    }
-    const instance = new Instance( props )
+  it( 'should assign the first three paramaters to this', () => {
+    const result = [
+      'expressLocator',
+      'config',
+      'ControlledError',
+    ].sort()
+    const instance = new Instance( ...result )
 
-    expect( instance ).toEqual( expect.objectContaining( props ) )
+    expect( Object.keys( instance ).sort() ).toEqual( result )
   } )
 
   it( 'should fetch dependencies from locator', () => {
     const get = jest.fn()
-    const props = { expressLocator: { get, }, }
+    const props = [
+      'config',
+      'ControlledError',
+    ]
     const result = 'test'
     const deps = [ result, ]
 
-    new Instance( props, deps )
+    new Instance( { get, }, ...props, deps )
 
     expect( get ).toHaveBeenCalledWith( result )
   } )
 
   it( 'throws an error if called with nothing', () => {
-    let err
-
-    try {
-      new Instance()
-    } catch ( e ) {
-      err = e
-    }
-
-    expect( err.message ).toBe( 'Locator must be provided to class in an object key-value pair' )
+    expect( () => new Instance() ).toThrow( 'Missing paramaters in Instance class constructor' )
   } )
 } )

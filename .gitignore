@@ -5,8 +5,8 @@ node_modules/
 coverage/
 dist/
 es/
-lib/
+/lib/
 logs/
 *.code-workspace
 *.log
-.jenkins
+*.jenkins

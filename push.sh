@@ -1,183 +1,126 @@
 #!/usr/bin/env bash
-set -e
 
-name=$(grep name package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+# get branch name from repo
 branch=$(git rev-parse --abbrev-ref HEAD)
-cur=$(grep version package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
-curver=$(echo "$cur" | grep -Eo '[0-9]*\.[0-9]*\.[0-9]*')
-preid=$(echo "$cur" | grep -Eo '(alpha|beta|rc)')
-assigned=''
 
-if [ "$branch" = "beta" ];
-then
-  next='next'
-elif [ "$branch" = "next" ];
-then
-  next='master'
-elif [ ! "$branch" = "master" ];
-then
-  next='beta';
-fi
+#get package name from package.json
+name=$(grep name package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
 
-if [[ "$1$2$3" =~ (-n) ]] && [ ! "$branch" = "master" ];
-then
-  nogittag=" --no-git-tag-version";
-else
-  nogittag="";
-fi
+#get current version from package.json
+cur=$(grep version package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
 
-if [[ "$1$2$3" =~ (-c) ]] && [ ! "$branch" = "master" ];
-then
-  checkout="yes";
-elif [[ "$1$2$3" =~ (-p) ]];
-then
-  checkout="no";
-else
-  checkout="";
-fi
+#get current prerelease id from current version
+if [[ "$cur" =~ ([a-z]{1,}) ]]; then preid=$(echo "$cur" | grep -Eo '([a-z]{1,})'); else preid='live'; fi
 
-warn="Versioning error from "$cur" on "$branch" branch. Strict versioning protocols are in place:\n
-1.  Checkout master to any non- ( master | next | beta ) branch\n
-2.  develop feature - don't forget a changelog, tests, flowtypes\n
-3.  assign ( alpha ) pre-( patch | minor | major ) version > yarn push [ <version> patch | minor | major ]\n
-4.  merge to ( beta ) branch\n
-5.  test and document\n
-6.  assign ( beta ) prerelease version > yarn push\n
-7.  merge to ( next ) branch\n
-9.  test and document\n
-8.  assign ( rc ) prerelease version > yarn push\n
-11. merge to ( master ) branch\n
-12. assign release version > yarn push\n
-hint: you can increment the ( alpha | beta | rc ) prerelease version by calling yarn push\n
-hint: you can inrement/assign the version without publishing by passing -n | --no-publish\n
-hint: you can immediately checkout to the next branch by passing -c, or skip the prompt by passing -p\n";
+#warning message if anything fails
+warn="Versioning error from $cur on $branch branch. Strict versioning protocols are in place:\\n
+1.  Checkout master to any non- ( master | next | beta ) branch\\n
+2.  develop feature - don't forget a changelog, tests, flowtypes\\n
+3.  assign ( alpha ) pre-( patch | minor | major ) version > yarn push [ <version> patch | minor | major ]\\n
+4.  merge to ( beta ) branch\\n
+5.  test and document\\n
+6.  assign ( beta ) prerelease version > yarn push\\n
+7.  merge to ( next ) branch\\n
+9.  test and document\\n
+8.  assign ( rc ) prerelease version > yarn push\\n
+11. merge to ( master ) branch\\n
+12. assign release version > yarn push\\n
+hint: you can increment the ( alpha | beta | rc ) prerelease version by calling yarn push\\n
+hint: you can inrement/assign the version without publishing by passing [ -n | --no-publish ]\\n
+hint: you can immediately checkout to the next branch by passing [ -c | --checkout ], or skip the prompt by passing [ -p | --pass-checkout ]\\n";
 
+#prompt function
 function prompt
 {
   PS3=$1
   shift
-  select opt in $@
+  select opt in "$@"
   do
     if [ -z "$opt" ];
     then
-      prompt "Invalid entry, try again: " $@;
-      break
+      prompt "Invalid entry, try again: " "$@"
+      break;
     else
-      echo $opt
+      echo "$opt"
       break;
     fi
   done
 }
 
-if [ "$branch" = "master" ];
-then
-  if [ ! "$preid" = "rc" ];
+#assigning relation variables for branches
+case "$branch" in
+  "beta" )
+    next='next'
+    previd='alpha'
+    newid='beta';;
+  "next" )
+    next='master'
+    previd='beta'
+    newid='rc';;
+  "master" )
+    next='dev'
+    previd='rc'
+    newid='';;
+  * )
+    next='beta'
+    previd='live'
+    newid='alpha';;
+esac
+
+#check if version coming from is invalid for current branch
+if [ ! "$preid" = "$previd" ] && [ ! "$preid" = "$newid" ];
   then
-    echo -e $warn
+    echo -e "$warn"
     exit 1;
-  fi
-  ver=$(yarn --silent semver $cur -i patch)
-  assigned='y'
-  echo "assigning release version $cur > $ver"
-elif [ "$branch" = "next" ];
-then
-  if [[ ! $preid =~ (beta|rc) ]];
+fi
+
+#determine new version
+if [ -z "$newid" ];
   then
-    echo -e $warn
-    exit 1;
-  fi
-  ver=$(yarn --silent semver $cur -i prerelease --preid rc)
-  if [ "$preid" = 'rc' ];
-  then
-    echo "incrementing rc prerelease version $cur > $ver";
+    prerelease=false
+    ver=$(yarn --silent semver "$cur" -i patch)
   else
-    assigned='y'
-    echo "assigning rc prerelease version $cur > $ver";
-  fi;
-elif [ "$branch" = "beta" ];
-then
-  if [[ ! $preid =~ (alpha|beta) ]];
-  then
-    echo -e $warn
-    exit 1;
-  fi
-  ver=$(yarn --silent semver $cur -i prerelease --preid beta)
-  if [ "$preid" = 'beta' ];
-  then
-    echo "incrementing beta prerelease version $cur > $ver";
-  else
-    assigned='y'
-    echo "assigning beta prerelease version $cur > $ver";
-  fi;
-else
-  if [ ! "$preid" = "alpha" ];
-  then
-    if [ ! -z "$preid" ];
-    then
-      echo -e $warn
-      exit 1;
-    fi
+    prerelease=true
     version=$1
-    if [[ ! $version =~ (major|minor|patch) ]];
-    then
-      version=$(prompt "Currently $cur - select your pre- <version>: " patch minor major );
+    if [ ! "$preid" = "live" ];
+      then version='release'
+    elif [[ ! "$version" =~ (major|minor|patch) ]];
+      then version=$(prompt "Currently $cur - select your pre- <version>: " patch minor major );
     fi
-    ver=$(yarn --silent semver $cur -i pre$version --preid alpha)
-    assigned='y'
-    echo "assigning alpha pre$version version $cur > $ver";
-  else
-    ver=$(yarn --silent semver $cur -i prerelease --preid alpha)
-    echo "incrementing alpha prerelease version $cur > $ver"
-  fi;
+    version=pre"$version"
+    ver=$(yarn --silent semver "$cur" -i "$version" --preid "$newid");
 fi
-cont=$(prompt "Continue?: " yes no)
-if [ "$cont" = "no" ];
-then
-  exit 0;
-else
-  git add . && git commit .
-  npm$nogittag version $ver
-  if [ -z "$nogittag" ];
+
+#get changelog for new version
+changelog=$(awk "/v$ver/{f=1;next} /## v/{f=0} f" CHANGELOG.md | sed 's/$/<br \/>/' | tr '\n' ' ' | tr '\r' ' ')
+
+#check if publishing and credentials
+if [[ "$1$2$3" =~ (-n) ]] && [ ! "$branch" = "master" ];
+  then nopublish="yes"
+elif [ -z "$GITHUB_USER" ] || [ -z "$GITHUB_PASSWORD" ] || [ -z "$changelog" ];
   then
-  changelog=$(awk "/v$ver/{f=1;next} /## v/{f=0} f" CHANGELOG.md | sed 's/$/<br \/>/' | tr '\n' ' ' | tr '\r' ' ')
-  if [ -z "$changelog" ];
-  then
-    echo 'A changelog is required, aborting'
-    exit 0;
-  fi
-    echo "publishing to $branch" && git push --tags origin $branch;
-    user=$(git config user.name)
-    if [ "$user" = "Matt Cuneo" ];
-    then
-      if [ "$branch" = "master" ];
-      then
-        prerelease=false;
-      else
-        prerelease=true;
-      fi
-      data="{\"tag_name\":"\"v$ver\"",\"name\":"\"v$ver\"",\"body\":"\"$changelog\"",\"prerelease\":$prerelease}"
-      curl --user "rabidpug" --data "$data" https://api.github.com/repos/rabidpug/$name/releases;
-    fi;
-  else
-    echo "pushing to $branch without publishing"
-    git push origin $branch;
-  fi;
-  if [ ! "$checkout" = "no" ];
-  then
-    if [ ! "$checkout" = "yes" ];
-    then
-      checkout=$(prompt "Checkout to $next?: " yes no);
-      echo $checkout
+    if [ -z "$changelog" ];
+      then echo 'A changelog is required to publish. If you do not wish to publish, pass the ( -n | --no-publish ) flag.';
+      else echo 'GITHUB_USER and GITHUB_PASSWORD must be set as environment variables to publish. If you do not wish to publish, pass the ( -n | --no-publish ) flag.';
     fi
-    if [ "$checkout" = "yes" ];
-    then
-      branchExists=$(git branch | grep -Eo "$next");
-      if [ -z "$branchExists" ];
-      then
-        git checkout -b $next;
-      else
-        git checkout $next;
-      fi;
-    fi;
-  fi;
+    exit 1;
 fi
+
+#prompt to continue
+if [ $(prompt "$cur > $ver. Continue?: " yes no) = "no" ]; then exit 0; fi
+
+#git add all, commit, increment version, and push
+git add -A
+git commit
+npm version "$ver"
+git push --tags origin "$branch";
+
+#if publishing, add changelog to release
+if [ -z "$nopublish" ];
+  then
+    data="{\"tag_name\":"\"v$ver\"",\"name\":"\"v$ver\"",\"body\":"\"$changelog\"",\"prerelease\":$prerelease}"
+    curl --user "$GITHUB_USER":"$GITHUB_PASSWORD" --data "$data" https://api.github.com/repos/rabidpug/"$name"/releases;
+fi
+
+#checkout to branch if on master branch, -c flag provided, or user responded yes
+if [ "$branch" = "master" ] || [[ "$1$2$3" =~ (-c) ]] || [ $(prompt "Checkout to $next? this will override any uncommitted changes in $next: " yes no) = "yes" ]; then git checkout -B "$next"; fi

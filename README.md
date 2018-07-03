@@ -38,14 +38,16 @@ yarn add express-locator
 
 ### Initialising locator
 
+You can either import expressLocator as a default import and access its methods, eg expressLocator.config(), or use named imports to import the method directly.
+
 ```javascript
-import expressLocator from 'express-locator';
+import { config } from 'express-locator';
 
 //OR
 
-const expressLocator = require('express-locator');
+const { config } = require('express-locator');
 
-expressLocator.config(config, ...dependencies);
+config(configurations, ...dependencies);
 ```
 
 ### Dependency Registration Object
@@ -88,31 +90,32 @@ If the provided construct is a Function or Class (Class must either extend the p
 ```javascript
 /**
  * @description configures and returns a dependency or class
- * @param {{ ControlledError, config, expressLocator }} props an object containing an extended
- * Error object which includes an isControlled = true, the locator instance and
- * the relevant config (or entire config object if config = true was included
- * in the registration object)
- * @param {[string]} dependencies the array of dependency names you provided in
+ * @param {Class} expressLocator
+ * @param {{}} config the relevant config (or entire config object if
+ * config = true was included in the registration object)
+ * @param {Class} ControlledError an Error object which includes an
+ * isControlled = true property
+ * @param {Array<string>} dependencies the array of dependency names you provided in
  * your registration object
  */
 
-function dependencyConfigurator(props, dependencies) {
+function dependencyConfigurator(expressLocator, config, ControlledError, dependencies) {
   //do stuff and return dependency
 }
 
 // or
 
 class Dependency {
-  constructor(props, dependencies) {
+  constructor(expressLocator, config, ControlledError, dependencies) {
     // do stuff to initiate class
   }
 }
 
 // or
 
-import expressLocator from 'express-locator';
+import { get } from 'express-locator';
 
-const Instance = expressLocator.get('instance');
+const Instance = get('instance');
 
 class Dependency extends Instance {
   someMethod() {
@@ -154,10 +157,10 @@ const config = {
 
 // elsewhere in your serverConstruct function
 
-const serverConstruct = ({ expressLocator, config }) => {
-  const server = expressLocator.get('http').createServer(expressLocator.get('app'));
+const serverConstruct = ({ get }, { port }) => {
+  const server = get('http').createServer(expressLocator.get('app'));
 
-  server.listen(config.port);
+  server.listen(port);
 
   return server;
 };
@@ -168,13 +171,13 @@ const serverConstruct = ({ expressLocator, config }) => {
 _Be careful to not create a circular dependency in your construct functions. Having two contruct functions retrieve each other will never resolve, as the dependency will only be cached once the construct function returns a value._
 
 ```javascript
-import expressLocator from 'express-locator'; //if not within a construct
+import { get } from 'express-locator'; //if not within a construct
 
-const dependencyName = expressLocator.get('dependencyName');
+const dependencyName = get('dependencyName');
 
 // OR if the dependency is an object you can retrieve a nested property
 
-const property = expressLocator.get('dependencyName.nested.property');
+const property = get('dependencyName.nested.property');
 ```
 
 ## Explanation

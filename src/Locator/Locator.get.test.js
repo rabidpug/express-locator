@@ -67,11 +67,9 @@ describe( 'Locator class get method', () => {
     }
     const configs = { [dep]: 'hi', }
     const result = [
-      {
-        ControlledError : locator.get( 'ControlledError' ),
-        config          : configs[dep],
-        expressLocator  : locator,
-      },
+      locator,
+      configs[dep],
+      locator.get( 'ControlledError' ),
       [ 'ControlledError', ],
     ]
 
@@ -95,11 +93,9 @@ describe( 'Locator class get method', () => {
     }
     const config = { [dep]: 'hi', }
     const result = [
-      {
-        ControlledError : locator.get( 'ControlledError' ),
-        config,
-        expressLocator  : locator,
-      },
+      locator,
+      config,
+      locator.get( 'ControlledError' ),
       [],
     ]
 
@@ -197,11 +193,9 @@ describe( 'Locator class get method', () => {
     locator.get( dep )
 
     const result = [
-      {
-        ControlledError : locator.get( 'ControlledError' ),
-        config: undefined, //eslint-disable-line
-        expressLocator  : locator,
-      },
+      locator,
+      {},
+      locator.get( 'ControlledError' ),
       [ 'ControlledError', ],
     ]
 
@@ -249,11 +243,9 @@ describe( 'Locator class get method', () => {
     locator.get( dep )
 
     const result = [
-      {
-        ControlledError : locator.get( 'ControlledError' ),
-        config: undefined, //eslint-disable-line
-        expressLocator  : locator,
-      },
+      locator,
+      {},
+      locator.get( 'ControlledError' ),
       [ 'ControlledError', ],
     ]
 

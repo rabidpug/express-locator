@@ -1,14 +1,14 @@
 {
   "files.exclude": {
-    "**coverage": true,
-    "**dist": true,
-    "**es": true,
-    "**lib": true,
-    "**yarn.lock": true,
-    "**.vscode": true,
-    "**yarn-error.log": true,
-    "**__mocks__": true,
-    "**LICENSE": true,
-    "**.jenkins": true
+    "**coverage": false,
+    "**dist": false,
+    "**es": false,
+    "**lib": false,
+    "**yarn.lock": false,
+    "**.vscode": false,
+    "**yarn-error.log": false,
+    "**__mocks__": false,
+    "**LICENSE": false,
+    "**.jenkins": false
   }
 }
