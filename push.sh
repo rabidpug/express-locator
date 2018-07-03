@@ -159,18 +159,20 @@ else
       curl --user "rabidpug" --data "$data" https://api.github.com/repos/rabidpug/$name/releases;
     fi;
   else
-    echo "pushing to $branch without publishing" && git push origin $branch;
+    echo "pushing to $branch without publishing"
+    git push origin $branch;
   fi;
   if [ ! "$checkout" = "no" ];
   then
     if [ ! "$checkout" = "yes" ];
     then
       checkout=$(prompt "Checkout to $next?: " yes no);
+      echo $checkout
     fi
     if [ "$checkout" = "yes" ];
     then
       branchExists=$(git branch | grep -Eo "$next");
-      if [ -z $branchExists ];
+      if [ -z "$branchExists" ];
       then
         git checkout -b $next;
       else
