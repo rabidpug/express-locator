@@ -14,7 +14,7 @@ fi
 pkgver=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
 name=$(cat package.json | grep name | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
 matchPublished=$(npm view $name versions | grep -Eo "'(.*)'" | grep -Eo "'$pkgver'")
-matchTagged=$(git tag -l | grep -Eo "^v$pkgver$")
+matchTagged=$(git ls-remote --tags origin | grep -Eo "\/v$pkgver$")
 
 if [ -z "$matchPublished" ] && [ ! -z "$tag" ] && [ ! -z "$matchTagged" ];
 then

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+set -e
+
 name=$(grep name package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
 branch=$(git rev-parse --abbrev-ref HEAD)
 cur=$(grep version package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
@@ -143,7 +145,7 @@ else
     echo 'A changelog is required, aborting'
     exit 0;
   fi
-    git tag -f v$ver -m "$changelog" && echo "publishing to $branch" && git push --tags origin $branch;
+    echo "publishing to $branch" && git push --tags origin $branch;
     user=$(git config user.name)
     if [ "$user" = "Matt Cuneo" ];
     then
