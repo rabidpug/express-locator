@@ -135,7 +135,7 @@ then
   exit 0;
 else
   git add . && git commit .
-  npm$nogittag --allow-same-version version $ver
+  npm$nogittag version $ver
   if [ -z "$nogittag" ];
   then
   echo $ver
