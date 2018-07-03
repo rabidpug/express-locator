@@ -2,7 +2,7 @@
 name=$(cat package.json | grep name | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
 branch=$(git rev-parse --abbrev-ref HEAD)
 cur=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
-curver=$(echo $cur | grep -Eo '[0-9]*\.[0-9]*\.[0-9]')
+curver=$(echo $cur | grep -Eo '[0-9]*\.[0-9]*\.[0-9]*')
 preid=$(echo $cur | grep -Eo '(alpha|beta|rc)')
 assigned=''
 changelog=$(<./CHANGELOG.md)
@@ -119,7 +119,7 @@ else
     version=$1
     if [[ ! $version =~ (major|minor|patch) ]];
     then
-      version=$(prompt "Currently $curver - select your pre- <version>: " patch minor major );
+      version=$(prompt "Currently $cur - select your pre- <version>: " patch minor major );
     fi
     ver=$(yarn --silent semver $cur -i pre$version --preid alpha)
     assigned='y'
@@ -146,6 +146,17 @@ else
     exit 0;
   fi
     git tag -f v$ver -m "$changelog" && echo "publishing to $branch" && git push --tags origin $branch;
+    user=$(git config user.name)
+    if [ "$user" = "Matt Cuneo" ];
+    then
+      if [ "$branch" = "master" ];
+      then
+        prerelease=false;
+      else
+        prerelease=true;
+      fi
+      curl --user "rabidpug" --data "'{\"tag_name\":\"v$ver\",\"name\":\"v$ver\",\"body\":\"$changelog\",\"prerelease\":$prerelease}'" https://api.github.com/repos/rabidpug/$name/releases;
+    fi;
   else
     echo "pushing to $branch without publishing" && git push origin $branch;
   fi;
