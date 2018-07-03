@@ -5,7 +5,7 @@ cur=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed '
 curver=$(echo $cur | grep -Eo '[0-9]*\.[0-9]*\.[0-9]*')
 preid=$(echo $cur | grep -Eo '(alpha|beta|rc)')
 assigned=''
-changelog=$(<./CHANGELOG.md)
+changelog=$(<CHANGELOG.md)
 
 if [ "$branch" = "beta" ];
 then
@@ -138,6 +138,7 @@ else
   npm$nogittag version $ver
   if [ -z "$nogittag" ];
   then
+  echo "changelog: $changelog"
   echo $ver
   changelog=$(echo $changelog | awk "/v$ver/{f=1;next} /## v/{f=0} f")
   echo "changelog: $changelog"
