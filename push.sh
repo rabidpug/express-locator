@@ -154,7 +154,7 @@ else
         prerelease=true;
       fi
       data="{\"tag_name\":"\"v$ver\"",\"name\":"\"v$ver\"",\"body\":"\"$changelog\"",\"prerelease\":$prerelease}"
-      curl --user "rabidpug" --data $data https://api.github.com/repos/rabidpug/$name/releases;
+      curl --user "rabidpug" --data "$data" https://api.github.com/repos/rabidpug/$name/releases;
     fi;
   else
     echo "pushing to $branch without publishing" && git push origin $branch;
