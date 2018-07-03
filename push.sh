@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 set -e
-trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
-trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
-name=$(grep name package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+name=$(grep name package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
 branch=$(git rev-parse --abbrev-ref HEAD)
-cur=$(grep version package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
-curver=$(echo "$cur" | grep -Eo '[0-9]*\.[0-9]*\.[0-9]*')
+cur=$(grep version package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
 preid=$(echo "$cur" | grep -Eo '(alpha|beta|rc)')
-assigned=''
 
 if [ "$branch" = "beta" ];
 then
@@ -38,34 +34,34 @@ else
   checkout="";
 fi
 
-warn="Versioning error from "$cur" on "$branch" branch. Strict versioning protocols are in place:\n
-1.  Checkout master to any non- ( master | next | beta ) branch\n
-2.  develop feature - don't forget a changelog, tests, flowtypes\n
-3.  assign ( alpha ) pre-( patch | minor | major ) version > yarn push [ <version> patch | minor | major ]\n
-4.  merge to ( beta ) branch\n
-5.  test and document\n
-6.  assign ( beta ) prerelease version > yarn push\n
-7.  merge to ( next ) branch\n
-9.  test and document\n
-8.  assign ( rc ) prerelease version > yarn push\n
-11. merge to ( master ) branch\n
-12. assign release version > yarn push\n
-hint: you can increment the ( alpha | beta | rc ) prerelease version by calling yarn push\n
-hint: you can inrement/assign the version without publishing by passing -n | --no-publish\n
-hint: you can immediately checkout to the next branch by passing -c, or skip the prompt by passing -p\n";
+warn="Versioning error from $cur on $branch branch. Strict versioning protocols are in place:\\n
+1.  Checkout master to any non- ( master | next | beta ) branch\\n
+2.  develop feature - don't forget a changelog, tests, flowtypes\\n
+3.  assign ( alpha ) pre-( patch | minor | major ) version > yarn push [ <version> patch | minor | major ]\\n
+4.  merge to ( beta ) branch\\n
+5.  test and document\\n
+6.  assign ( beta ) prerelease version > yarn push\\n
+7.  merge to ( next ) branch\\n
+9.  test and document\\n
+8.  assign ( rc ) prerelease version > yarn push\\n
+11. merge to ( master ) branch\\n
+12. assign release version > yarn push\\n
+hint: you can increment the ( alpha | beta | rc ) prerelease version by calling yarn push\\n
+hint: you can inrement/assign the version without publishing by passing -n | --no-publish\\n
+hint: you can immediately checkout to the next branch by passing -c, or skip the prompt by passing -p\\n";
 
 function prompt
 {
   PS3=$1
   shift
-  select opt in $@
+  select opt in "$@"
   do
     if [ -z "$opt" ];
     then
-      prompt "Invalid entry, try again: " $@;
+      prompt "Invalid entry, try again: " "$@";
       break
     else
-      echo $opt
+      echo "$opt"
       break;
     fi
   done
@@ -75,40 +71,37 @@ if [ "$branch" = "master" ];
 then
   if [ ! "$preid" = "rc" ];
   then
-    echo -e $warn
+    echo -e "$warn"
     exit 1;
   fi
-  ver=$(yarn --silent semver $cur -i patch)
-  assigned='y'
+  ver=$(yarn --silent semver "$cur" -i patch)
   echo "assigning release version $cur > $ver"
 elif [ "$branch" = "next" ];
 then
   if [[ ! $preid =~ (beta|rc) ]];
   then
-    echo -e $warn
+    echo -e "$warn"
     exit 1;
   fi
-  ver=$(yarn --silent semver $cur -i prerelease --preid rc)
+  ver=$(yarn --silent semver "$cur" -i prerelease --preid rc)
   if [ "$preid" = 'rc' ];
   then
     echo "incrementing rc prerelease version $cur > $ver";
   else
-    assigned='y'
     echo "assigning rc prerelease version $cur > $ver";
   fi;
 elif [ "$branch" = "beta" ];
 then
   if [[ ! $preid =~ (alpha|beta) ]];
   then
-    echo -e $warn
+    echo -e "$warn"
     exit 1;
   fi
-  ver=$(yarn --silent semver $cur -i prerelease --preid beta)
+  ver=$(yarn --silent semver "$cur" -i prerelease --preid beta)
   if [ "$preid" = 'beta' ];
   then
     echo "incrementing beta prerelease version $cur > $ver";
   else
-    assigned='y'
     echo "assigning beta prerelease version $cur > $ver";
   fi;
 else
@@ -116,7 +109,7 @@ else
   then
     if [ ! -z "$preid" ];
     then
-      echo -e $warn
+      echo -e "$warn"
       exit 1;
     fi
     version=$1
@@ -124,11 +117,10 @@ else
     then
       version=$(prompt "Currently $cur - select your pre- <version>: " patch minor major );
     fi
-    ver=$(yarn --silent semver $cur -i pre$version --preid alpha)
-    assigned='y'
+    ver=$(yarn --silent semver "$cur" -i pre"$version" --preid alpha)
     echo "assigning alpha pre$version version $cur > $ver";
   else
-    ver=$(yarn --silent semver $cur -i prerelease --preid alpha)
+    ver=$(yarn --silent semver "$cur" -i prerelease --preid alpha)
     echo "incrementing alpha prerelease version $cur > $ver"
   fi;
 fi
@@ -137,8 +129,9 @@ if [ "$cont" = "no" ];
 then
   exit 0;
 else
-  git add . && git commit .
-  npm$nogittag version $ver
+  git add .
+  git commit .
+  npm$nogittag version "$ver"
   if [ -z "$nogittag" ];
   then
   changelog=$(awk "/v$ver/{f=1;next} /## v/{f=0} f" CHANGELOG.md | sed 's/$/<br \/>/' | tr '\n' ' ' | tr '\r' ' ')
@@ -147,7 +140,8 @@ else
     echo 'A changelog is required, aborting'
     exit 0;
   fi
-    echo "publishing to $branch" && git push --tags origin $branch;
+    echo "publishing to $branch"
+    git push --tags origin "$branch";
     user=$(git config user.name)
     if [ "$user" = "Matt Cuneo" ];
     then
@@ -158,11 +152,11 @@ else
         prerelease=true;
       fi
       data="{\"tag_name\":"\"v$ver\"",\"name\":"\"v$ver\"",\"body\":"\"$changelog\"",\"prerelease\":$prerelease}"
-      curl --user "rabidpug" --data "$data" https://api.github.com/repos/rabidpug/$name/releases;
+      curl --user "rabidpug" --data "$data" https://api.github.com/repos/rabidpug/"$name"/releases;
     fi;
   else
     echo "pushing to $branch without publishing"
-    git push origin $branch;
+    git push origin "$branch";
   fi;
   if [ ! "$checkout" = "no" ];
   then
