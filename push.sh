@@ -169,7 +169,6 @@ else
     if [ ! "$checkout" = "yes" ];
     then
       checkout=$(prompt "Checkout to $next?: " yes no);
-      echo $checkout
     fi
     if [ "$checkout" = "yes" ];
     then
