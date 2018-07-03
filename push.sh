@@ -119,8 +119,9 @@ git push --tags origin "$branch";
 if [ -z "$nopublish" ];
   then
     data="{\"tag_name\":"\"v$ver\"",\"name\":"\"v$ver\"",\"body\":"\"$changelog\"",\"prerelease\":$prerelease}"
-    curl --user "$GITHUB_USER":"$GITHUB_PASSWORD" --data "$data" https://api.github.com/repos/rabidpug/"$name"/releases;
+    curl --user "$GITHUB_USER" --data "$data" https://api.github.com/repos/rabidpug/"$name"/releases;
 fi
 
 #checkout to branch if on master branch, -c flag provided, or user responded yes
-if [ "$branch" = "master" ] || [[ "$1$2$3" =~ (-c) ]] || [ $(prompt "Checkout to $next? this will override any uncommitted changes in $next: " yes no) = "yes" ]; then git checkout -B "$next"; fi
+if [ ! "$branch" = "master" ] && [[ ! "$1$2$3" =~ (-p) ]];
+then if [ "$branch" = "master" ] || [[ "$1$2$3" =~ (-c) ]] || [ $(prompt "Checkout to $next? this will override any uncommitted changes in $next: " yes no) = "yes" ]; then git checkout -B "$next"; fi; fi
