@@ -140,7 +140,7 @@ else
   then
   changelog=$(echo $changelog | awk "/v$ver/{f=1;next} /## v/{f=0} f")
   echo "changelog: $changelog"
-  if [[ ! "$changelog" =~ ([a-zA-Z]) ]];
+  if [ -z "$changelog" ];
   then
     echo 'A changelog is required, aborting'
     exit 0;
