@@ -22,6 +22,7 @@
   "devDependencies": {
     "@babel/cli": "^7.0.0-beta.51",
     "@babel/core": "^7.0.0-beta.51",
+    "@babel/plugin-proposal-class-properties": "^7.0.0-beta.51",
     "@babel/plugin-transform-flow-strip-types": "^7.0.0-beta.51",
     "@babel/preset-env": "^7.0.0-beta.51",
     "@babel/preset-flow": "^7.0.0-beta.51",
@@ -31,6 +32,7 @@
     "babel-jest": "^23.2.0",
     "babel-loader": "^8.0.0-beta.4",
     "babel-plugin-add-module-exports": "^0.3.0-pre.1",
+    "babel-plugin-dynamic-import-node": "^2.0.0",
     "coveralls": "^3.0.1",
     "cross-env": "^5.2.0",
     "eslint": "^5.0.1",

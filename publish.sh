@@ -13,10 +13,11 @@ fi
 
 pkgver=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
 name=$(cat package.json | grep name | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
-pubs=$(npm view $name versions | grep -Eo "'(.*)'")
-match=$(echo $pubs | grep -Eo "'$pkgver'")
+pubs=$()
+matchPublished=$(npm view $name versions | grep -Eo "'(.*)'" | grep -Eo "'$pkgver'")
+matchTagged=$(git tag -l | grep -Eo "^v$pkgver$")
 
-if [ -z "$match" ] && [ ! -z "$tag" ];
+if [ -z "$matchPublished" ] && [ ! -z "$tag" ] && [ ! -z "$matchTagged" ];
 then
   npm publish --tag $tag --ignore-scripts
   npm dist-tag add $name@$pkgver $tag

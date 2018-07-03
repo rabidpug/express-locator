@@ -7,20 +7,32 @@ preid=$(echo $cur | grep -Eo '(alpha|beta|rc)')
 assigned=''
 changelog=$(<./CHANGELOG.md)
 
+if [[ "$1$2" =~ (-n) ]];
+then
+  if [ "$branch" = "master" ];
+  then
+    echo 'Cannot push to master without publishing'
+    exit 1;
+  fi
+  nogittag=" --no-git-tag-version";
+else
+  nogittag="";
+fi
+
 warn="Versioning error from $cur on $branch branch. Strict versioning protocols are in place:\n
-1. Checkout master to any non- ( master | next | beta ) branch\n
-2. assign ( alpha ) pre-( patch | minor | major ) version > yarn push [ <version> patch | minor | major ]\n
-3. increment ( alpha ) prerelease version > yarn push\n
-4. merge to ( beta ) branch\n
-5. assign ( beta ) prerelease version > yarn push\n
-6. test\n
-7. increment ( beta ) prerelease version > yarn push\n
-4. merge to ( next ) branch\n
-5. assign ( rc ) prerelease version > yarn push\n
-6. test\n
-7. increment ( rc ) prerelease version > yarn push\n
-8. merge to ( master ) branch\n
-9. assign release version > yarn push\n";
+1.  Checkout master to any non- ( master | next | beta ) branch\n
+2.  develop feature - don't forget a changelog, tests, flowtypes\n
+3.  assign ( alpha ) pre-( patch | minor | major ) version > yarn push [ <version> patch | minor | major ]\n
+4.  merge to ( beta ) branch\n
+5.  test and document\n
+6.  assign ( beta ) prerelease version > yarn push\n
+7.  merge to ( next ) branch\n
+9.  test and document\n
+8.  assign ( rc ) prerelease version > yarn push\n
+11. merge to ( master ) branch\n
+12. assign release version > yarn push\n
+hint: you can increment the ( alpha | beta | rc ) prerelease version by calling yarn push\n
+hint: you can inrement/assign the version without publishing by passing -n | --no-publish\n";
 
 function prompt
 {
@@ -100,19 +112,24 @@ else
     echo "incrementing alpha prerelease version $cur > $ver"
   fi;
 fi
-changelog=$(echo "$changelog" | awk "/v$ver/{f=1;next} /#/{f=0} f")
-echo "changelog: $changelog"
-if [[ ! "$changelog" =~ ([a-zA-Z]) ]];
-then
-  echo 'A changelog is required, aborting'
-  exit 0;
-fi
-
 cont=$(prompt "Continue?: " yes no)
 if [ "$cont" = "no" ];
 then
   exit 0;
 else
   git add . && git commit .
-  npm version $ver && git tag -f v$ver -m "$changelog" && echo "pushing to $branch with tag" && git push --tags origin $branch;
+  npm$nogittag version $ver
+  if [ -z "$nogittag" ];
+  then
+  changelog=$(echo "$changelog" | awk "/v$ver/{f=1;next} /## v/{f=0} f")
+  echo "changelog: $changelog"
+  if [[ ! "$changelog" =~ ([a-zA-Z]) ]];
+  then
+    echo 'A changelog is required, aborting'
+    exit 0;
+  fi
+    git tag -f v$ver -m "$changelog" && echo "publishing to $branch" && git push --tags origin $branch;
+  else
+    echo "pushing to $branch without publishing" && git push origin $branch;
+  fi;
 fi
