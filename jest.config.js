@@ -6,4 +6,4 @@ module.exports = {
     '<rootDir/src',
     '<rootDir>/node_modules',
   ],
-};
+}

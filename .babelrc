@@ -5,7 +5,7 @@
     ],
     "@babel/preset-flow"
   ],
-  "plugins": ["dynamic-import-node","@babel/plugin-transform-flow-strip-types", "@babel/plugin-proposal-class-properties","add-module-exports"],
+  "plugins": ["dynamic-import-node","@babel/plugin-transform-flow-strip-types", "@babel/plugin-proposal-class-properties"],
 
   "env": {
     "commonjs": {
@@ -18,7 +18,7 @@
           }
         ]
       ],
-      "plugins": ["dynamic-import-node","@babel/plugin-transform-flow-strip-types", "@babel/plugin-proposal-class-properties","add-module-exports"]
+      "plugins": ["dynamic-import-node","@babel/plugin-transform-flow-strip-types", "@babel/plugin-proposal-class-properties"]
     },
     "es": {
       "presets": [
