@@ -1,7 +1,7 @@
 #Node
 node_modules/
 #project
-.vscode/
+*.vscode/
 coverage/
 dist/
 es/
@@ -9,4 +9,5 @@ es/
 logs/
 *.code-workspace
 *.log
+*.lock
 *.jenkins

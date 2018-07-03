@@ -118,7 +118,7 @@ export default class Locator {
           this.cache[dependencyName] = require( name )
         } else {
           const expressLocator = this
-          const configs = this.configs ? config ? this.configs : this.configs[dependencyName] : {}
+          const configs = ( this.configs && config ? this.configs : this.configs && this.configs[dependencyName] ) || {}
           const controlledError = this.get( 'ControlledError' )
 
           if ( construct.prototype instanceof Instance || instance ) {

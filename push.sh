@@ -97,11 +97,11 @@ changelog=$(awk "/v$ver/{f=1;next} /## v/{f=0} f" CHANGELOG.md | sed 's/$/<br \/
 #check if publishing and credentials
 if [[ "$1$2$3" =~ (-n) ]] && [ ! "$branch" = "master" ];
   then nopublish="yes"
-elif [ -z "$GITHUB_USER" ] || [ -z "$GITHUB_PASSWORD" ] || [ -z "$changelog" ];
+elif [ -z "$GITHUB_USER" ] || [ -z "$changelog" ];
   then
     if [ -z "$changelog" ];
       then echo 'A changelog is required to publish. If you do not wish to publish, pass the ( -n | --no-publish ) flag.';
-      else echo 'GITHUB_USER and GITHUB_PASSWORD must be set as environment variables to publish. If you do not wish to publish, pass the ( -n | --no-publish ) flag.';
+      else echo 'GITHUB_USER must be set as environment variables to publish. If you do not wish to publish, pass the ( -n | --no-publish ) flag.';
     fi
     exit 1;
 fi
