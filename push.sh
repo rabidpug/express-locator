@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
-name=$(cat package.json | grep name | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+name=$(grep name package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
 branch=$(git rev-parse --abbrev-ref HEAD)
-cur=$(cat package.json | grep version | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
-curver=$(echo $cur | grep -Eo '[0-9]*\.[0-9]*\.[0-9]*')
-preid=$(echo $cur | grep -Eo '(alpha|beta|rc)')
+cur=$(grep version package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+curver=$(echo "$cur" | grep -Eo '[0-9]*\.[0-9]*\.[0-9]*')
+preid=$(echo "$cur" | grep -Eo '(alpha|beta|rc)')
 assigned=''
-changelog=$(<CHANGELOG.md)
 
 if [ "$branch" = "beta" ];
 then
@@ -35,7 +34,7 @@ else
   checkout="";
 fi
 
-warn="Versioning error from $cur on $branch branch. Strict versioning protocols are in place:\n
+warn="Versioning error from "$cur" on "$branch" branch. Strict versioning protocols are in place:\n
 1.  Checkout master to any non- ( master | next | beta ) branch\n
 2.  develop feature - don't forget a changelog, tests, flowtypes\n
 3.  assign ( alpha ) pre-( patch | minor | major ) version > yarn push [ <version> patch | minor | major ]\n
@@ -138,10 +137,7 @@ else
   npm$nogittag version $ver
   if [ -z "$nogittag" ];
   then
-  echo "changelog: $changelog"
-  echo $ver
-  changelog=$(echo $changelog | awk "/v$ver/{f=1;next} /## v/{f=0} f")
-  echo "changelog: $changelog"
+  changelog=$(awk "/v$ver/{f=1;next} /## v/{f=0} f" CHANGELOG.md | sed 's/$/<br \/>/' | tr '\n' ' ' | tr '\r' ' ')
   if [ -z "$changelog" ];
   then
     echo 'A changelog is required, aborting'
@@ -157,7 +153,6 @@ else
       else
         prerelease=true;
       fi
-      changelog=$(echo $changelog | sed 's/$/<br \/>/' | tr '\n' ' ' | tr '\r' ' ')
       data="{\"tag_name\":"\"v$ver\"",\"name\":"\"v$ver\"",\"body\":"\"$changelog\"",\"prerelease\":$prerelease}"
       curl --user "rabidpug" --data $data https://api.github.com/repos/rabidpug/$name/releases;
     fi;
