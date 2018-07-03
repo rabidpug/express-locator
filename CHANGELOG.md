@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## v1.2.0-beta.10
+## v1.2.0-beta.11
 
 ### FEATURES
 

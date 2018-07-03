@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -e
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+trap 'echo "\"${last_command}\" command filed with exit code $?."' EXIT
 
 name=$(grep name package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
 branch=$(git rev-parse --abbrev-ref HEAD)
@@ -174,9 +176,9 @@ else
       branchExists=$(git branch | grep -Eo "$next");
       if [ -z "$branchExists" ];
       then
-        git checkout -b $next;
+        git checkout -b "$next";
       else
-        git checkout $next;
+        git checkout "$next";
       fi;
     fi;
   fi;
