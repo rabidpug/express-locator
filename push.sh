@@ -135,9 +135,10 @@ then
   exit 0;
 else
   git add . && git commit .
-  npm$nogittag version $ver
+  npm$nogittag --allow-same-version version $ver
   if [ -z "$nogittag" ];
   then
+  echo $ver
   changelog=$(echo $changelog | awk "/v$ver/{f=1;next} /## v/{f=0} f")
   echo "changelog: $changelog"
   if [ -z "$changelog" ];
