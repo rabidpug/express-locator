@@ -138,7 +138,7 @@ else
   npm$nogittag version $ver
   if [ -z "$nogittag" ];
   then
-  changelog=$(echo "$changelog" | awk "/v$ver/{f=1;next} /## v/{f=0} f")
+  changelog=$(echo $changelog | awk "/v$ver/{f=1;next} /## v/{f=0} f")
   echo "changelog: $changelog"
   if [[ ! "$changelog" =~ ([a-zA-Z]) ]];
   then
@@ -155,8 +155,8 @@ else
       else
         prerelease=true;
       fi
-      data="'{\"tag_name\":\"v$ver\",\"name\":\"v$ver\",\"body\":\"$changelog\",\"prerelease\":$prerelease}'"
-      echo $data
+      changelog=$(echo $changelog | sed 's/$/<br \/>/' | tr '\n' ' ' | tr '\r' ' ')
+      data="{\"tag_name\":"\"v$ver\"",\"name\":"\"v$ver\"",\"body\":"\"$changelog\"",\"prerelease\":$prerelease}"
       curl --user "rabidpug" --data $data https://api.github.com/repos/rabidpug/$name/releases;
     fi;
   else
