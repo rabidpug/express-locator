@@ -1,6 +1,6 @@
 {
   "name": "express-locator",
-  "version": "1.1.0",
+  "version": "1.2.0-alpha.0",
   "description": "a service locator",
   "repository": "git+https://rabidpug@github.com/rabidpug/express-locator.git",
   "author": "Matt Cuneo",

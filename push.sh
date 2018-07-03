@@ -7,16 +7,32 @@ preid=$(echo $cur | grep -Eo '(alpha|beta|rc)')
 assigned=''
 changelog=$(<./CHANGELOG.md)
 
-if [[ "$1$2" =~ (-n) ]];
+if [ "$branch" = "beta" ];
 then
-  if [ "$branch" = "master" ];
-  then
-    echo 'Cannot push to master without publishing'
-    exit 1;
-  fi
+  next='next'
+elif [ "$branch" = "next" ];
+then
+  next='master'
+elif [ ! "$branch" = "master" ];
+then
+  next='beta';
+fi
+
+if [[ "$1$2$3" =~ (-n) ]] && [ ! "$branch" = "master" ];
+then
   nogittag=" --no-git-tag-version";
 else
   nogittag="";
+fi
+
+if [[ "$1$2$3" =~ (-c) ]] && [ ! "$branch" = "master" ];
+then
+  checkout="yes";
+elif [[ "$1$2$3" =~ (-p) ]];
+then
+  checkout="no";
+else
+  checkout="";
 fi
 
 warn="Versioning error from $cur on $branch branch. Strict versioning protocols are in place:\n
@@ -32,7 +48,8 @@ warn="Versioning error from $cur on $branch branch. Strict versioning protocols 
 11. merge to ( master ) branch\n
 12. assign release version > yarn push\n
 hint: you can increment the ( alpha | beta | rc ) prerelease version by calling yarn push\n
-hint: you can inrement/assign the version without publishing by passing -n | --no-publish\n";
+hint: you can inrement/assign the version without publishing by passing -n | --no-publish\n
+hint: you can immediately checkout to the next branch by passing -c, or skip the prompt by passing -p\n";
 
 function prompt
 {
@@ -131,5 +148,22 @@ else
     git tag -f v$ver -m "$changelog" && echo "publishing to $branch" && git push --tags origin $branch;
   else
     echo "pushing to $branch without publishing" && git push origin $branch;
+  fi;
+  if [ ! "$checkout" = "no" ];
+  then
+    if [ ! "$checkout" = "yes" ];
+    then
+      checkout=$(prompt "Checkout to $next?: " yes no);
+    fi
+    if [ "$checkout" = "yes" ];
+    then
+      branchExists=$(git branch | grep -Eo "$next");
+      if [ -z $branchExists ];
+      then
+        git checkout -b $next;
+      else
+        git checkout $next;
+      fi;
+    fi;
   fi;
 fi
