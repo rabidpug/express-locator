@@ -95,7 +95,7 @@ fi
 changelog=$(awk "/v$ver/{f=1;next} /## v/{f=0} f" CHANGELOG.md | sed 's/$/<br \/>/' | tr '\n' ' ' | tr '\r' ' ')
 
 #check if publishing and credentials
-if [[ "$1$2$3" =~ (-n) ]] && [ ! "$branch" = "master" ];
+if [[ "$1$2$3" =~ (-n) ]] && [ ! "$branch" = "master" ] || [[ ! "$branch" =~ (beta|next|master) ]];
   then nopublish="yes"
 elif [ -z "$GITHUB_USER" ] || [ -z "$changelog" ];
   then
